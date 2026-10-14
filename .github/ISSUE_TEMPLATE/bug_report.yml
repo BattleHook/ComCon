@@ -1,0 +1,74 @@
+name: Bug report
+description: Something in ComCon does not work as described in the Help guide.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a problem.
+        **Privacy:** do not paste callsign-linked personal data, passwords, API keys or full log files with personal information. Trim log excerpts to the relevant lines.
+  - type: input
+    id: version
+    attributes:
+      label: ComCon version
+      description: Shown in the About window (for example 0.1.0-beta.1+c91e524).
+      placeholder: 0.1.0-beta.1+c91e524
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: Windows 11 24H2
+    validations:
+      required: true
+  - type: dropdown
+    id: radio
+    attributes:
+      label: Radio
+      options:
+        - Icom IC-7400
+        - Icom IC-7600
+        - Kenwood TS-590SG
+        - Yaesu (experimental)
+        - Other / not radio-related
+    validations:
+      required: true
+  - type: input
+    id: clients
+    attributes:
+      label: Connected client programs
+      description: Programs using the ComCon virtual ports (for example Ham Shack Console, WSJT-X, logger) and the virtual port pair driver (com0com).
+    validations:
+      required: false
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Start ComCon with profile ...
+        2. Connect ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log excerpt
+      description: Trimmed, without personal data. This will be formatted as code automatically.
+      render: text
+    validations:
+      required: false

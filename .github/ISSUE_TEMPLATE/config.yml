@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Installation and Help guide
+    url: https://github.com/BattleHook/ComCon/blob/main/Documentation/Help/index.html
+    about: The same guide ships offline with ComCon (Help button or F1). Please check it first.
+  - name: Support ComCon on Ko-fi
+    url: https://ko-fi.com/battlehook
+    about: Optional one-time donations. ComCon stays free either way.

@@ -1,0 +1,61 @@
+name: Radio support request
+description: Ask for a new radio model, or report results with an experimental one (for example Yaesu).
+title: "[Radio]: "
+labels: ["radio-support"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ComCon currently supports the Icom IC-7400, Icom IC-7600 and Kenwood TS-590SG; Yaesu support is experimental.
+        New radios can only be added reliably when someone can test on real hardware.
+  - type: input
+    id: model
+    attributes:
+      label: Radio make and model
+      placeholder: Yaesu FT-991A
+    validations:
+      required: true
+  - type: dropdown
+    id: protocol
+    attributes:
+      label: CAT protocol
+      options:
+        - Icom CI-V
+        - Kenwood ASCII
+        - Yaesu ASCII (newer models)
+        - Yaesu binary (older models)
+        - Other / unknown
+    validations:
+      required: true
+  - type: input
+    id: serial
+    attributes:
+      label: Serial settings
+      description: Baud rate, data/stop bits, handshake, CI-V address if applicable.
+      placeholder: 38400 8N1, no handshake
+    validations:
+      required: false
+  - type: dropdown
+    id: testing
+    attributes:
+      label: Can you test on real hardware?
+      options:
+        - Yes, I own this radio and can test beta builds
+        - No, request only
+    validations:
+      required: true
+  - type: textarea
+    id: docs
+    attributes:
+      label: CAT documentation
+      description: Links to the manufacturer's CAT/CI-V reference manual or other public protocol documentation.
+    validations:
+      required: false
+  - type: textarea
+    id: results
+    attributes:
+      label: Results so far (experimental radios)
+      description: What worked and what did not, with a trimmed log excerpt if useful.
+      render: text
+    validations:
+      required: false
