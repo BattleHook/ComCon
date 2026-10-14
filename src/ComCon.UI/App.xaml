@@ -1,0 +1,14 @@
+<Application x:Class="ComCon.UI.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:ComCon.UI"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <SolidColorBrush x:Key="RunningRowBackgroundBrush" Color="#C8E6C9" />
+        <SolidColorBrush x:Key="RunningRowForegroundBrush" Color="#000000" />
+        <SolidColorBrush x:Key="RunningSelectedRowBackgroundBrush" Color="#A5D6A7" />
+        <SolidColorBrush x:Key="FaultRowBackgroundBrush" Color="#FFCDD2" />
+        <SolidColorBrush x:Key="FaultRowForegroundBrush" Color="#000000" />
+        <SolidColorBrush x:Key="FaultSelectedRowBackgroundBrush" Color="#EF9A9A" />
+    </Application.Resources>
+</Application>

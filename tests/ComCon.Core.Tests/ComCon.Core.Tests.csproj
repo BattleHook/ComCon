@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>12.0</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest" Version="4.0.2" />
+    <PackageReference Include="System.IO.Ports" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+    <Compile Include="..\..\src\ComCon.UI\ViewModels\MainViewModel.cs" Link="UI\MainViewModel.cs" />
+    <Compile Include="..\..\src\ComCon.UI\ViewModels\CommandIpcActivityTracker.cs" Link="UI\CommandIpcActivityTracker.cs" />
+    <Compile Include="..\..\src\ComCon.Windows\ComConReadOnlyPipeHost.cs" Link="Windows\ComConReadOnlyPipeHost.cs" />
+    <Compile Include="..\..\src\ComCon.Windows\ComConCommandPipeNames.cs" Link="Windows\ComConCommandPipeNames.cs" />
+    <Compile Include="..\..\src\ComCon.Windows\ComConCommandTestPipeAcceptor.cs" Link="Windows\ComConCommandTestPipeAcceptor.cs" />
+    <Compile Include="..\..\src\ComCon.Windows\ComConCommandTestPipeListener.cs" Link="Windows\ComConCommandTestPipeListener.cs" />
+    <Compile Include="..\..\src\ComCon.Windows\ComConOfflineSupervisor.cs" Link="Windows\ComConOfflineSupervisor.cs" />
+    <Compile Include="..\..\src\ComCon.Windows\ComConCommandGroupSupervisor.cs" Link="Windows\ComConCommandGroupSupervisor.cs" />
+    <Compile Include="..\..\src\ComCon.Windows\ComConBridgeRuntime.cs" Link="Windows\ComConBridgeRuntime.cs" />
+    <Compile Include="..\..\src\ComCon.Windows\ComConProductionCoordinatorOptions.cs" Link="Windows\ComConProductionCoordinatorOptions.cs" />
+    <Compile Include="..\..\src\ComCon.Windows\SerialPortByteBridgeEndpointFactory.cs" Link="Windows\SerialPortByteBridgeEndpointFactory.cs" />
+    <None Update="Fixtures\HscHelpers\*.ps1"
+          TargetPath="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Fixtures\HscHelpers\sha256.json"
+          TargetPath="HscHelpers-sha256.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Fixtures\ClientRigProfiles\*.json"
+          TargetPath="ClientRigProfiles\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Fixtures\BridgeProfiles\*.json"
+          TargetPath="BridgeProfiles\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <ProjectReference Include="..\..\src\ComCon.Core\ComCon.Core.csproj" />
+  </ItemGroup>
+
+</Project>

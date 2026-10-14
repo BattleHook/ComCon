@@ -1,0 +1,36 @@
+HSC interoperability test snapshots
+Snapshot review date: 2026-10-14
+ComCon-CommandClient.ps1 refreshed 2026-10-14 (user-approved) to the HSC CI-V CPU round 1
+version: compiled JSON property scanner and loop-based notification handling.
+Source project: HamShackConsole_Development
+Source directory: Helpers
+Exact file versions: sha256.json (SHA-256 of unmodified file bytes)
+
+These five files are test-only snapshots, not ComCon runtime dependencies,
+not a general-purpose client SDK, and not bundled application help examples.
+ComCon and its IPC protocol do not require HSC installation.
+
+PA1RGX reports that these helpers were created for the user's projects by the
+user and/or AI assistants, with no intentionally copied third-party
+implementation. PA1RGX authorized redistribution under the accompanying MIT
+license. This records reported provenance, not independent legal clearance.
+No upstream release or clean source commit is claimed; byte hashes are the pin.
+
+Dependency chain:
+ComCon-OfflinePreview.ps1 -> ComCon-CivObservations.ps1
+ComCon-CivObservations.ps1 -> CIV-Common.ps1, ComCon-IpcClient.ps1
+ComCon-CommandClient.ps1 -> Windows/.NET facilities, no external script found
+
+Tests use isolated fake endpoints and self-test modes. The preview needs
+Windows PowerShell STA and WinForms. Non-self-test preview logging paths are
+relative to the script directory. CommandClient contains model-specific
+defaults and PTT_OFF functionality; do not execute it against station pipes
+as a test or imply that all contained functions are read-only.
+
+Update policy:
+1. Review the exact candidate files, dependencies and redistribution terms.
+2. Obtain explicit approval for the snapshot update.
+3. Copy unchanged bytes; update sha256.json and this provenance record.
+4. Run the snapshot hash test and affected hardware-free interoperability tests
+   in a clean standalone layout without a sibling HSC directory.
+Do not independently develop these snapshot copies or auto-sync from a sibling.

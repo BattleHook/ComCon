@@ -1,0 +1,170 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark">
+<title>ComCon — Installation and User Guide</title><link rel="stylesheet" href="guide.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to guide</a>
+<header class="site-header"><p class="eyebrow">Offline user guide</p><h1>ComCon</h1>
+<p class="lede">Installation, configuration and safe operation of the Windows COM-port broker for radio-control applications.</p>
+<p class="version-note"><strong>Release note:</strong> This guide describes the planned portable Windows 11 x64 release layout. Check the release page and release notes for exact package contents, supported radios and open acceptance gates.</p></header>
+<nav class="toc" aria-labelledby="toc-title"><h2 id="toc-title">Guide contents</h2><ol>
+<li><a href="#overview">Overview, models and safety</a></li><li><a href="#requirements">Prerequisites</a></li><li><a href="#install">Download, verify and install</a></li>
+<li><a href="#architecture">Ports and connection layouts</a></li><li><a href="#configuration">Configure profiles</a></li><li><a href="#transports">RAW and command IPC</a></li>
+<li><a href="#workflow">Start and stop bridges</a></li><li><a href="#integrations">Commander, HSC and other clients</a></li><li><a href="#status">Status, recovery and appearance</a></li>
+<li><a href="#safe-checks">Safe checks and live-radio boundaries</a></li><li><a href="#troubleshooting">Troubleshooting</a></li><li><a href="#diagnostics">Logs and diagnostics</a></li>
+<li><a href="#updates">Backup, updates, rollback and uninstall</a></li><li><a href="#faq">FAQ and known limitations</a></li><li><a href="#support">Support, license, credits and optional support</a></li>
+</ol><p class="toc-extra"><a href="#ipc-client">Connect your own IPC client</a> · <a href="ipc-client-example.cs">C# handshake example source</a></p></nav>
+<main id="main">
+<section id="overview"><h2>1. Overview, supported models and safety</h2>
+<p>ComCon opens a radio's physical serial port and can provide either a RAW byte bridge to a paired virtual COM port or a command-capable local named-pipe IPC session. Profiles have independent configuration and lifecycle; the current configuration model provides up to four profile slots. ComCon is not a generic TCP/HTTP API, a radio safety interlock, or a substitute for the client application that creates and interprets radio commands.</p>
+<p><strong>Platform:</strong> Windows 11 x64. The planned distribution is a self-contained portable ZIP, so no separate .NET installation is needed to run that package. Use the release notes if a particular prerelease lists a narrower scope.</p>
+<p><strong>Radio scope:</strong> the intended initial models are Icom IC-7400, Icom IC-7600 and Kenwood TS-590SG, using CI-V or Kenwood ASCII as applicable. Implementation and test evidence do not certify every model, firmware or command. Yaesu ASCII/RAW support is experimental and hardware-unverified; Yaesu command IPC is unavailable. Treat each profile/model as unverified until its release notes and your own approved checks say otherwise.</p>
+<aside class="warning"><strong>Safety:</strong> ComCon has no safety certification and is not a safety filter. RAW forwards bytes unchanged, including transmit and tune commands. Command IPC also carries client-originated bytes; successful delivery or a cached value does not prove that the radio received, understood or safely completed an operation. You remain responsible for transmitter operation, correct radio/port selection, and preventing unintended transmission.</aside>
+<p>Do not let another application open the same physical radio port directly while ComCon owns it. Stop any bridge before changing cabling or making a connection handover.</p>
+<h3>Help, About and first use</h3>
+<p>The main window has <strong>Help (F1)</strong> and <strong>About</strong> buttons at the top right. <strong>Help (F1)</strong> and the F1 key open this local <code>Help\index.html</code> in the default browser. If the page or browser launch is unavailable, the app reports an error; there is no silent online fallback. About shows version, attribution, license/notices, repository/support links and may offer optional Ko-fi support. It says ComCon is free and gives no safety certification.</p>
+<p>On first use for a Windows user, a welcome offers <strong>Continue</strong>, <strong>Open Help</strong> and an optional <strong>Support on Ko-fi (optional)</strong> button. Continue or closing the window dismisses it without donating; it is not repeated on ordinary launches or updates. If the dismissal cannot be saved, ComCon shows a warning and the welcome appears again next start. Its per-user marker is <code>%LOCALAPPDATA%\ComCon\FirstUse.json</code>; delete that file to see the welcome again. Help and welcome do not start/stop a bridge or open a radio connection. External links are followed only on explicit action.</p></section>
+<section id="requirements"><h2>2. Prerequisites</h2><ul>
+<li>Windows 11 x64 and the ComCon portable ZIP from official GitHub Releases.</li><li>The included self-contained runtime; no separate .NET installation is needed for that package. A framework-dependent developer build has different prerequisites and may require the matching .NET 10 Windows Desktop Runtime; follow the developer instructions for source builds.</li>
+<li>The correct Windows serial driver for your radio interface, installed from a source you trust. ComCon does not install it.</li>
+<li>A virtual COM pair only for a legacy COM application (for example Commander) connected through RAW. Command-IPC-only use needs no virtual pair.</li>
+<li>The radio-control client software you plan to use, installed and configured separately.</li></ul>
+<p><strong>com0com:</strong> this is an optional third-party virtual null-modem driver referenced as one way to provide paired virtual COM ports. It is not bundled, installed or configured by ComCon. Check current Windows 11 compatibility, signatures, licensing and official instructions before use. This guide does not ask you to disable Windows signing, Defender, SmartScreen or other security protections. Do not install a virtual-pair driver if your setup does not need one.</p></section>
+<section id="install"><h2>3. Download, verify and install</h2><ol>
+<li>Open the <a href="https://github.com/BattleHook/ComCon/releases">BattleHook/ComCon Releases</a> page and choose the Windows 11 x64 portable ZIP for the intended release. Read its release notes. If no asset and checksum are available, wait for the release; do not treat a source checkout as a published package.</li>
+<li>Download the ZIP and its published SHA-256 checksum. In PowerShell, replace the sample name with the downloaded file:
+<pre><code>Get-FileHash .\ComCon-Windows-x64.zip -Algorithm SHA256</code></pre>
+Compare the full result with the checksum for that exact asset. Do not extract or run a file whose hash differs.</li>
+<li>Extract the ZIP to a folder your Windows user can write to, such as under <code>%LOCALAPPDATA%</code> or your user Documents folder. Keep the package layout together. Do not extract over an existing installation before backing it up.</li>
+<li>The initial package is unsigned, so Windows may show a SmartScreen trust prompt. After verifying the source and checksum, select <strong>More info</strong> → <strong>Run anyway</strong> only for the ComCon file you intentionally downloaded. If the prompt differs or your policy blocks it, stop and ask your administrator; never disable security protection.</li>
+<li>Start <code>ComCon.UI.exe</code>. No bridge starts merely because the app opened. Check the displayed version; use <strong>Help</strong> or F1 to open this guide.</li></ol>
+<p>Expected release contents include <code>ComCon.UI.exe</code>, <code>Help\index.html</code>, <code>LICENSE.txt</code>, <code>THIRD-PARTY-NOTICES.md</code> and a <code>licenses\</code> folder. A missing expected file is a packaging issue; contact support instead of downloading a replacement from an unknown source.</p>
+<p>This guide is inside the package's <code>Help</code> folder. The links point to the files beside the executable: <a href="../LICENSE.txt">MIT license text</a> (<code>../LICENSE.txt</code>) and <a href="../THIRD-PARTY-NOTICES.md">third-party notices</a> (<code>../THIRD-PARTY-NOTICES.md</code>). In the development source tree, these documents are at the repository root.</p></section>
+<section id="architecture"><h2>4. Ports and connection layouts</h2><h3>Legacy application using RAW</h3>
+<pre class="diagram" aria-label="RAW bridge connections">Radio serial port  &lt;──&gt;  ComCon physical-port endpoint
+                                      │
+                              ComCon virtual endpoint
+                                      │
+                            virtual COM pair / driver
+                                      │
+Legacy client (e.g. Commander)  &lt;──&gt;  paired peer COM port</pre>
+<p>COM names are conceptual. Select the radio port and ComCon-side virtual endpoint in the profile; the legacy client opens the paired peer. ComCon owns the physical radio port. A virtual pair is supplied and maintained separately.</p>
+<h3>Command-capable IPC client</h3><pre class="diagram" aria-label="Command IPC connections">Third-party client  &lt;── local Windows named pipes ──&gt;  ComCon profile
+                           CAT byte stream + control/notifications
+ComCon profile  &lt;── serial connection ──&gt;  Radio</pre>
+<p>The client identifies a rig profile by a mapped UUID. IPC does not use TCP, expose a generic JSON CAT-command API or require a virtual COM pair unless a separate legacy app also needs one. See <a href="#ipc-client">Connect your own IPC client</a>.</p></section>
+<section id="configuration"><h2>5. Configure profiles</h2>
+<p>ComCon starts with profile slots that can be named and configured. A profile contains enabled state, physical and optional virtual/Commander ports, adapter/framing, serial settings and optional command-IPC settings. Configuration files are validated JSON. Prefer the UI, back up before hand-editing, and use <strong>Validate</strong> after loading or changing a file.</p>
+<ol><li>Select a profile and give it a label that identifies the radio/connection.</li>
+<li>Set <strong>Enabled</strong> only after checking radio and ports. Select the correct model/adapter and protocol framing. CI-V, Kenwood ASCII, Yaesu ASCII and None are distinct choices; don't select a mode just because a device uses similar commands.</li>
+<li>Set baud rate, data bits, parity, stop bits, handshake, DTR and RTS to match the radio/interface and client. Defaults are not evidence of your radio's settings. Avoid changing several values at once.</li>
+<li>For RAW, set the physical and ComCon-side virtual COM ports. In the legacy app, choose the paired peer. Confirm the actual pair mapping rather than guessing port numbers.</li>
+<li>For command IPC, enable that profile's command-IPC option and import/map the client's rig-profile UUID. The identity is not the display/model name or radio address; the target ComCon profile supplies physical-port and serial configuration.</li>
+<li>Choose <strong>Validate</strong>; correct every error. Use <strong>Save configuration...</strong> to save to a user-writable location and <strong>Load configuration...</strong> to reopen a saved file. Saving alone does not start a bridge.</li></ol>
+<p>Configuration JSON is schema-versioned and uses exact lower-camel-case names. The UI remembers the last configuration path with local preferences. If the file moves, load it explicitly. Do not reuse another station's settings without checking every port, address and identity.</p>
+<aside class="note"><strong>Autoconnect label:</strong> the saved flag is not automatic startup restoration. Selecting a stopped saved IPC Autoconnect profile can offer a start-list workflow; review and confirm the list. Loading/saving or launching ComCon does not silently start profiles.</aside></section>
+<section id="transports"><h2>6. RAW and command IPC</h2><div class="table-wrap"><table><caption>Choose the transport your client requires</caption><thead><tr><th>Mode</th><th>Connection</th><th>Boundary</th></tr></thead><tbody>
+<tr><th scope="row">RAW</th><td>Byte forwarding between the radio endpoint and ComCon's virtual-COM endpoint.</td><td>Bytes are unchanged; RAW is not a safety filter and may carry transmit/tune commands.</td></tr>
+<tr><th scope="row">Command IPC</th><td>A named-pipe CAT byte stream plus a separate profile-scoped control/notification pipe.</td><td>The client supplies bytes and interprets replies. Delivery outcomes are not radio-operation confirmations.</td></tr></tbody></table></div>
+<p>The modes have different setup, port and client requirements. Select the mode your application supports. Do not let another application open the ComCon-owned physical port. A successful pipe connection or physical write does not prove a command completed.</p></section>
+<section id="workflow"><h2>7. Start and stop bridges</h2><ol>
+<li>Load/configure a profile, validate and save it.</li><li>Refresh ports and verify the physical/virtual endpoint names against Windows and your cabling/pair documentation.</li>
+<li>Select a profile and choose <strong>Start selected</strong>, or choose <strong>Start list...</strong> to review a set. Confirm only after verifying every selected radio and port.</li>
+<li>Check the profile overview for actual state, saved mode, mapping and any conflict/fault. A start request is not proof that a bridge is running.</li>
+<li>Use <strong>Stop selected</strong> for one profile or <strong>Stop all...</strong> for active profiles. Confirm the target and wait for final status before changing a port or cable.</li></ol>
+<p>Profiles can run independently only when their physical and virtual port assignments do not conflict. Treat a conflict as a reason to correct configuration, not force a second owner. A faulted/retained profile may reserve ports until it stops or is explicitly recovered. ComCon does not restore radio sessions at app startup. Do not close the app as a substitute for deliberate stop while a profile is active.</p></section>
+<section id="integrations"><h2>8. Commander, HSC and other clients</h2><h3>Commander / legacy COM client</h3>
+<p>Use RAW when a legacy application expects a COM port. A separate virtual pair is required: ComCon opens one endpoint and the legacy app opens its peer. Configure the client for the matching model, address and serial/protocol behavior. Exact settings depend on your radio and application.</p>
+<h3>Ham Shack Console (HSC)</h3><p>HSC is not a ComCon runtime dependency. A particular HSC setup may separately need an HSC client component and compatible version/configuration. Follow HSC's own release instructions; ComCon does not install HSC. HSC is one possible IPC client, not a prerequisite for the developer workflow below.</p>
+<h3 id="ipc-client">Connect your own IPC client</h3><p>This describes command IPC. Use a release whose notes explicitly enable it. For first connection, use a configured profile and synthetic/offline setup where available; do not start a real radio merely to test a pipe handshake. This is local Windows named-pipe IPC, not TCP/network access.</p>
+<h4>Prerequisites and target mapping</h4><ul>
+<li>Use a client rig-profile UUID mapped by ComCon to exactly one profile ID 1–4. It is a persistent canonical lowercase hyphenated UUID, not model name or CI-V address.</li>
+<li>The ComCon profile must be enabled, configured for command IPC, and explicitly started. Check status for profile/IPC readiness.</li>
+<li>Only one IPC session may own a profile at once. Separate profiles may have separate sessions, up to four profile slots. Commander COM may coexist on a profile when supported, but two IPC owners may not.</li></ul>
+<p>The UUID mapping is configured on the ComCon side; present the client's UUID and use the returned ComCon profile/session identity. The client's local rig-profile file need not be present at runtime. Do not rely on somebody else's station settings.</p>
+<h4>Production pipe roles and setup order</h4><ol>
+<li>Connect to shared CAT pipe <code>ComConCmd_Cat</code>. Send framed JSON <code>cat.handshake</code> with <code>contractVersion</code> = <code>comcon-ipc-v1</code> and <code>rigProfileId</code>.</li>
+<li>Read the framed response. On <code>cat.accepted</code>, retain integer <code>profileId</code> and UUID <code>sessionId</code>. On <code>cat.rejected</code>, inspect <code>errorCode</code>/<code>reason</code> and stop setup.</li>
+<li>Connect to <code>ComConCmd_Cat_Control_Profile{profileId}</code>, replacing the placeholder with accepted profile number. Send <code>control.bind</code> with that same profile/session identity; require <code>control.bound</code>, else handle <code>control.rejected</code>.</li>
+<li>Send framed <code>cat.ready</code> with the same identity over CAT. Only after validation may CAT carry raw bytes. Never send CAT bytes before this boundary. There is no success reply/ACK for <code>cat.ready</code>.</li>
+<li>Keep both pipes open. Close cleanly on shutdown. Lost/invalid control channel ends the session; establish a fresh session rather than assuming reconnect/replay.</li></ol>
+<h4>Framing and exact envelope contract</h4><p>Each setup/control JSON object uses strict UTF-8, preceded by a four-byte unsigned big-endian payload length; the prefix is not included. Payloads are limited to 16,384 bytes. No newline, comments, trailing commas or unknown fields. Names are case-sensitive. This is not the separate read-only JSON-lines status pipe. After readiness, CAT is a raw byte stream, not JSON or length-prefixed CAT records.</p>
+<p>Every envelope has <code>messageType</code> and <code>contractVersion</code>. Session-associated envelopes also have <code>profileId</code> and <code>sessionId</code>. UUIDs are canonical lowercase hyphenated strings. <code>notificationSequence</code> and <code>recordSequence</code> are positive decimal strings, not JSON numbers.</p>
+<div class="table-wrap"><table><caption>Message types and additional fields</caption><thead><tr><th>Message</th><th>Direction</th><th>Additional fields</th></tr></thead><tbody>
+<tr><td><code>cat.handshake</code></td><td>client → ComCon</td><td><code>rigProfileId</code></td></tr>
+<tr><td><code>cat.accepted</code>, <code>control.bound</code></td><td>ComCon → client</td><td><code>profileId</code>, <code>sessionId</code></td></tr>
+<tr><td><code>cat.rejected</code></td><td>ComCon → client</td><td><code>errorCode</code>, <code>reason</code></td></tr>
+<tr><td><code>control.bind</code>, <code>cat.ready</code></td><td>client → ComCon</td><td><code>profileId</code>, <code>sessionId</code></td></tr>
+<tr><td><code>control.rejected</code></td><td>ComCon → client</td><td><code>errorCode</code>, <code>reason</code>; identity only if validated</td></tr>
+<tr><td><code>record.rejected</code></td><td>ComCon → client</td><td><code>notificationSequence</code>, <code>recordSequence</code>, <code>deliveryStatus</code>=<code>NOT_SENT</code>, <code>reason</code></td></tr>
+<tr><td><code>record.outcome</code></td><td>ComCon → client</td><td><code>notificationSequence</code>, <code>recordSequence</code>, <code>deliveryStatus</code>; <code>reason</code> only for non-success</td></tr>
+<tr><td><code>framing.notification</code></td><td>ComCon → client</td><td><code>notificationSequence</code>, <code>errorCode</code>, <code>reason</code></td></tr>
+<tr><td><code>session.notification</code></td><td>ComCon → client</td><td><code>notificationSequence</code>, <code>event</code>=<code>session.ended</code>, <code>reason</code></td></tr>
+<tr><td><code>notification.ack</code></td><td>client → ComCon</td><td><code>notificationSequence</code></td></tr></tbody></table></div>
+<p>Every structured record, framing or session notification requires an ACK carrying its exact <code>notificationSequence</code>. Process a repeated notification once per session/sequence, but ACK it again. ACK confirms notification receipt only; it never authorizes CAT write retry.</p>
+<p>The implementation bounds setup to 5 seconds, pending notifications to 32 (and 32 KiB), deferred acknowledgments to 8, and ACK wait to 2 seconds with a 500 ms retry interval. Retransmission is of the identical notification envelope/sequence only. If an ACK deadline expires, or the control channel fails, the session ends. Never replay a CAT record whose delivery is uncertain.</p>
+<h4>Delivery outcomes, errors and cleanup</h4><ul>
+<li><code>WRITE_SUCCEEDED</code> means ComCon's physical write completed; it does not mean the radio received, processed or acknowledged the command.</li>
+<li><code>NOT_SENT</code> means implementation proved the record was not written. <code>UNKNOWN_DELIVERY</code> means dispatch/write status is uncertain. Never automatically repeat either record.</li>
+<li>Setup rejections use stable uppercase error codes such as <code>RIG_PROFILE_NOT_MAPPED</code>, <code>PROFILE_BUSY</code>, <code>UNSUPPORTED_VERSION</code>, <code>CONTROL_BIND_TIMEOUT</code> or <code>CAT_READY_TIMEOUT</code>; inspect both code and human-readable reason.</li>
+<li>Framing alerts use <code>FRAMING_ANOMALY</code> or <code>FRAMING_OVERFLOW</code>. The only defined lifecycle event is <code>session.ended</code>. A fatal control-protocol error may close the session without a final lifecycle notice.</li></ul>
+<p>Close both pipe streams on cancellation or setup/read/write error. A new session gets a fresh UUID and sequence spaces starting at 1. Do not claim transparent reconnect, radio resynchronization or command completion.</p>
+<h4>Minimal C# connection example</h4><p><a href="ipc-client-example.cs">Open the standalone C# example</a> (no third-party packages). In a .NET 10 console project, use it as <code>Program.cs</code> and run <code>dotnet run -- &lt;mapped-lowercase-rig-profile-uuid&gt;</code>. It performs the two-pipe handshake, sends <code>cat.ready</code>, prints control notifications and acknowledges them. It deliberately sends no CAT bytes, so it does not query, transmit or tune the radio. Build and validate an adapted client against the release; this guide task did not run a build or connect to live hardware.</p>
+</section>
+<section id="status"><h2>9. Status, recovery and appearance</h2>
+<p>The status area and profile overview report saved mode and actual state, selected endpoint mappings, IPC pipe/session information when applicable, legacy connection state and visible fault reason. Follow current status rather than assuming a previous start remains active.</p><ul>
+<li><strong>Recover Legacy</strong> appears for eligible legacy-client recovery states. Use it after addressing the displayed cause; it is not a radio reset or a guarantee of resynchronization.</li>
+<li><strong>Recover IPC...</strong> is an explicit service-recovery action when enabled. Review affected profiles and status; it does not restore a client session or safely repeat a command.</li>
+<li><strong>UI Styling...</strong> opens appearance settings. Theme/color preferences are per-user, not radio profile configuration. UI colors are stored in <code>%LOCALAPPDATA%\ComCon\UiColors.json</code>.</li>
+<li><strong>Capture raw CAT traffic</strong> controls sensitive diagnostics; see <a href="#diagnostics">Logs and diagnostics</a>. Capture is not a safety measure or command confirmation.</li></ul></section>
+<section id="safe-checks"><h2>10. Safe checks and live-radio boundaries</h2><h3>Before connecting hardware</h3><ul>
+<li>Validate with no bridge running. Confirm model, physical port, serial settings, virtual pair and client endpoint.</li><li>Use hardware-free or synthetic endpoints for developer handshake/framing checks. An IPC handshake is not a radio check.</li><li>Read release notes and radio/client manuals. Arrange an operator-approved test plan and prevent unintended transmission.</li></ul>
+<h3>When an operator approves a radio check</h3><p>Begin only with the radio in an appropriate state and a known read-only query supported by the exact radio/client combination. Monitor radio display and ComCon status. Do not use transmit, tune, keying or power-control commands as tests. Stop if identity/state/response is unexpected. A reply, pipe connection or successful write proves neither safety nor operation completion.</p></section>
+<section id="troubleshooting"><h2>11. Troubleshooting</h2><dl>
+<dt>Port is missing</dt><dd>Choose <strong>Refresh ports</strong>; check Device Manager, cable/interface power and vendor driver. Verify the selected COM name; do not guess.</dd>
+<dt>Port is busy or profiles conflict</dt><dd>Stop its owning profile and close applications that opened the radio/virtual port directly. Check reservations and correct duplicate physical/virtual mappings.</dd>
+<dt>Virtual pair does not connect</dt><dd>Confirm both endpoints exist and are paired; ComCon and legacy app use opposite endpoints. Check driver version/signature. ComCon does not bundle com0com or repair it.</dd>
+<dt>Radio does not answer / wrong values</dt><dd>Recheck model, framing, serial settings, radio address and client settings against the actual device. Bridge start alone does not establish model support. See release notes for Yaesu and other model limits.</dd>
+<dt>IPC handshake is rejected</dt><dd>Check IPC enabled/profile explicitly started, UUID mapping, version and competing client. Follow setup order and keep both pipes open.</dd>
+<dt>Missing ACK, timeout or disconnect</dt><dd>Correlate session UUID and notification sequence. Do not replay the last CAT record. Establish a new session only after reviewing status/fault cause.</dd>
+<dt>Legacy client unavailable after disconnect</dt><dd>Read legacy status/fault. Use <strong>Recover Legacy</strong> only when enabled and the cause is corrected. Recovery does not prove stream synchronization.</dd>
+<dt>Configuration invalid/stale</dt><dd>Load the intended file, validate it and compare ports with Windows. Check the remembered configuration path if the file moved.</dd>
+<dt>Help page is missing</dt><dd>Restore the release's <code>Help</code> folder from the verified package. There is no online fallback; do not use an unverified replacement.</dd></dl></section>
+<section id="diagnostics"><h2>12. Logs and diagnostics</h2><p>Local diagnostic material is under <code>%LOCALAPPDATA%\ComCon\</code>. Structured development-fault entries are in <code>Logging\ComCon-development-faults.jsonl</code> (UTC, component, profile and bounded message). Raw CAT capture is <code>Logging\ComCon-raw-cat.jsonl</code>, with rotated files named <code>ComConRawCatLog_*</code>; each is limited to 1 MiB and up to ten files are retained. The raw-capture preference is <code>Logging\ComCon-raw-cat-capture.json</code>. UI colors are in <code>UiColors.json</code>; window-position data may be under <code>Windows\</code>.</p>
+<aside class="warning"><strong>Privacy:</strong> Raw CAT capture can contain station identifiers, commands, radio responses and sensitive activity. Enable it only if needed. Review/redact logs, call signs, serials, paths, UUIDs and configuration details before attaching anything to a public issue. Do not publish configuration files or captures by default.</aside>
+<p>Capture is off by default on a fresh install and can resume on later launches if enabled. Changing it does not start a bridge. Capture requires CI-V or Kenwood ASCII record framing; it is suspended for an active profile using unsupported framing. Logs/captures are diagnostic evidence only: they do not authorize retries or confirm radio state. Keep only relevant evidence and redact it yourself before sharing.</p></section>
+<section id="updates"><h2>13. Backup, updates, rollback and uninstall</h2><h3>Before an update</h3><ol>
+<li>Stop active profiles and close ComCon normally.</li><li>Back up the portable installation and every configuration file saved elsewhere. Keep the known-good ZIP and checksum for rollback.</li>
+<li>Download the new release and verify its SHA-256. Extract to a new user-writable folder first; do not overwrite your only working copy.</li><li>Read release notes for schema/model/known-issue/migration changes. Load the intended configuration, validate ports, then start only after operator review.</li></ol>
+<p>Automatic configuration migration, rollback and session restoration are not promised. Preserve the previous package/configuration until the new version is reviewed. Per-user UI settings, positions, logs/captures and first-use dismissal are separate from the executable package and normally survive replacing its folder.</p>
+<h3>Uninstall</h3><p>Stop every active bridge and close the app. Back up settings/logs/captures you need. Delete the extracted application folder and, if you also want to remove per-user ComCon data, delete <code>%LOCALAPPDATA%\ComCon</code>. This may include UI preferences, first-use state, positions, logs and captures. Configurations saved elsewhere are not automatically deleted; remove them only after confirming they are no longer needed. Uninstall any virtual COM driver separately using its supported instructions.</p></section>
+<section id="faq"><h2>14. FAQ and known limitations</h2><dl>
+<dt>Do I need to install .NET?</dt><dd>No separate installation is needed for the planned self-contained ZIP. Source builds have different prerequisites.</dd>
+<dt>Does ComCon transmit or tune automatically?</dt><dd>Starting alone does not initiate transmit/tune. RAW may forward client transmit/tune bytes, so it is not a safety filter.</dd>
+<dt>Does IPC confirm radio commands?</dt><dd>No. <code>WRITE_SUCCEEDED</code> reports the physical write only. The client interprets replies; no delivery outcome certifies safety/completion.</dd>
+<dt>Do I need com0com?</dt><dd>Only if a legacy COM client uses RAW and needs a virtual pair; not for IPC-only use.</dd>
+<dt>Does ComCon start saved profiles automatically?</dt><dd>No automatic startup-session restoration is implemented; start/list actions require user review and confirmation.</dd>
+<dt>Is every radio/firmware certified?</dt><dd>No. Initial intended scope is IC-7400, IC-7600 and TS-590SG, but support must be checked per release. Yaesu is experimental and has no command IPC.</dd>
+<dt>Does an offline test prove radio safety?</dt><dd>No. Offline tests cannot certify a radio, driver, firmware or operating setup. Live checks need separate operator approval.</dd></dl>
+<p>Release-specific open gates can include driver/signature compatibility, model/firmware acceptance, packaging or other items noted in that release. This guide is not evidence that a gate has passed.</p></section>
+<section id="support"><h2>15. Support, license, credits and optional support</h2><p>Report bugs or ask for help via <a href="https://github.com/BattleHook/ComCon/issues">GitHub Issues</a>. There is no guaranteed response time/SLA. Search existing issues and remove station-private data first.</p>
+<h3>Issue report checklist</h3><pre><code>ComCon version/release:
+Windows version/architecture:
+Radio model and firmware (if relevant):
+Transport mode (RAW or command IPC):
+Profile/port details (redacted):
+Exact error/status text:
+Steps to reproduce:
+Expected vs actual behavior:
+Offline or operator-approved live check:
+Diagnostics attached (reviewed and redacted):</code></pre>
+<p>Do not include passwords, account/payment information, private station configuration, unredacted call signs/serial numbers, or raw CAT traffic unless essential and reviewed.</p>
+<h3>License and attribution</h3><p>ComCon is intended to use the MIT License for original code/documentation. Copyright (c) 2026 PA1RGX. Attribution: <strong>BattleHook (PA1RGX)</strong>. See packaged <a href="../LICENSE.txt">LICENSE.txt</a> and <a href="../THIRD-PARTY-NOTICES.md">THIRD-PARTY-NOTICES.md</a> for actual release terms and component notices. In the source tree these are at repository root. MIT does not automatically cover third-party components or artwork.</p>
+<h3>Optional support</h3><p>ComCon is free to use. If it helps your station, you can optionally support its development with a one-time donation on <a href="https://ko-fi.com/battlehook">Ko-fi</a>. You choose the amount. Donations are not required and do not unlock features.</p>
+<p>Project repository: <a href="https://github.com/BattleHook/ComCon">github.com/BattleHook/ComCon</a> · Support: <a href="https://github.com/BattleHook/ComCon/issues">GitHub Issues</a>.</p></section>
+</main><footer><p>ComCon · Offline guide · Attribution: BattleHook (PA1RGX) · Copyright (c) 2026 PA1RGX</p><p><a href="#main">Back to top</a></p></footer>
+</body></html>
+
+

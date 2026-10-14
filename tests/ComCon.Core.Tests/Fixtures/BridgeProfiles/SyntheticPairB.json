@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "profiles": [
+    {
+      "id": 2,
+      "label": "Synthetic bridge pair B",
+      "enabled": true,
+      "autoConnect": false,
+      "commandIpcEnabled": false,
+      "physicalPort": "COM101",
+      "virtualPort": "COM112",
+      "commanderPort": "COM122",
+      "adapter": "passthrough",
+      "framing": "civ",
+      "radioAddress": null,
+      "controllerAddress": null,
+      "serialSettings": {
+        "baudRate": 19200,
+        "dataBits": 8,
+        "parity": "none",
+        "stopBits": "one",
+        "handshake": "none",
+        "dtrEnable": false,
+        "rtsEnable": false
+      }
+    }
+  ]
+}

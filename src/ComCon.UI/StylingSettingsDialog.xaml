@@ -1,0 +1,95 @@
+<Window x:Class="ComCon.UI.StylingSettingsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="UI Styling Settings"
+        Width="620" Height="530"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Profile table row highlight &amp; text colors" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10" />
+
+        <GroupBox Grid.Row="1" Header="Theme presets" Margin="0,0,0,12" Padding="8,6">
+            <WrapPanel>
+                <Button Content="Windows / Standard" Click="ApplyWindowsTheme" Padding="8,4" Margin="0,0,8,4" />
+                <Button Content="Light Theme" Click="ApplyLightTheme" Padding="8,4" Margin="0,0,8,4" />
+                <Button Content="Dark Theme" Click="ApplyDarkTheme" Padding="8,4" Margin="0,0,8,4" />
+                <Button Content="High Contrast" Click="ApplyHighContrastTheme" Padding="8,4" Margin="0,0,0,4" />
+            </WrapPanel>
+        </GroupBox>
+
+        <Grid Grid.Row="2" Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="110" />
+                <ColumnDefinition Width="34" />
+                <ColumnDefinition Width="70" />
+                <ColumnDefinition Width="110" />
+                <ColumnDefinition Width="34" />
+                <ColumnDefinition Width="70" />
+                <ColumnDefinition Width="95" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="38" />
+                <RowDefinition Height="38" />
+            </Grid.RowDefinitions>
+
+            <!-- Running row colors -->
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Running bridge:" VerticalAlignment="Center" FontWeight="Medium" />
+            <Border Grid.Row="0" Grid.Column="1" x:Name="RunningSwatchBorder" Width="24" Height="22" CornerRadius="3"
+                    BorderBrush="#888" BorderThickness="1" HorizontalAlignment="Left" VerticalAlignment="Center" ToolTip="Background color" />
+            <TextBlock Grid.Row="0" Grid.Column="2" x:Name="RunningHexText" VerticalAlignment="Center" FontFamily="Consolas, Segoe UI" FontSize="12" />
+            <Button Grid.Row="0" Grid.Column="3" Content="Background..." Click="ChooseRunningColor" Padding="6,4" Width="95"
+                    HorizontalAlignment="Left" VerticalAlignment="Center" />
+
+            <Border Grid.Row="0" Grid.Column="4" x:Name="RunningTextSwatchBorder" Width="24" Height="22" CornerRadius="3"
+                    BorderBrush="#888" BorderThickness="1" HorizontalAlignment="Left" VerticalAlignment="Center" ToolTip="Character / text color" />
+            <TextBlock Grid.Row="0" Grid.Column="5" x:Name="RunningTextHexText" VerticalAlignment="Center" FontFamily="Consolas, Segoe UI" FontSize="12" />
+            <Button Grid.Row="0" Grid.Column="6" Content="Text..." Click="ChooseRunningTextColor" Padding="6,4" Width="80"
+                    HorizontalAlignment="Left" VerticalAlignment="Center" />
+
+            <!-- Faulted row colors -->
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Faulted bridge:" VerticalAlignment="Center" FontWeight="Medium" />
+            <Border Grid.Row="1" Grid.Column="1" x:Name="FaultSwatchBorder" Width="24" Height="22" CornerRadius="3"
+                    BorderBrush="#888" BorderThickness="1" HorizontalAlignment="Left" VerticalAlignment="Center" ToolTip="Background color" />
+            <TextBlock Grid.Row="1" Grid.Column="2" x:Name="FaultHexText" VerticalAlignment="Center" FontFamily="Consolas, Segoe UI" FontSize="12" />
+            <Button Grid.Row="1" Grid.Column="3" Content="Background..." Click="ChooseFaultColor" Padding="6,4" Width="95"
+                    HorizontalAlignment="Left" VerticalAlignment="Center" />
+
+            <Border Grid.Row="1" Grid.Column="4" x:Name="FaultTextSwatchBorder" Width="24" Height="22" CornerRadius="3"
+                    BorderBrush="#888" BorderThickness="1" HorizontalAlignment="Left" VerticalAlignment="Center" ToolTip="Character / text color" />
+            <TextBlock Grid.Row="1" Grid.Column="5" x:Name="FaultTextHexText" VerticalAlignment="Center" FontFamily="Consolas, Segoe UI" FontSize="12" />
+            <Button Grid.Row="1" Grid.Column="6" Content="Text..." Click="ChooseFaultTextColor" Padding="6,4" Width="80"
+                    HorizontalAlignment="Left" VerticalAlignment="Center" />
+        </Grid>
+
+        <TextBlock Grid.Row="3" Text="Live table row preview:" FontWeight="SemiBold" Margin="0,0,0,6" />
+
+        <Border Grid.Row="4" BorderBrush="#D0D0D0" BorderThickness="1" CornerRadius="3" Padding="0" Margin="0,0,0,16" VerticalAlignment="Top">
+            <StackPanel>
+                <Border x:Name="RunningPreviewRow" Padding="10,8" BorderThickness="0,0,0,1" BorderBrush="#E0E0E0">
+                    <TextBlock x:Name="RunningPreviewText" Text="Profile 1 / Running IPC — Physical COM3, Virtual COM21, Legacy COM31" FontSize="13" />
+                </Border>
+                <Border x:Name="FaultPreviewRow" Padding="10,8">
+                    <TextBlock x:Name="FaultPreviewText" Text="Profile 2 / Faulted — Port COM4 in use or unavailable" FontSize="13" />
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <DockPanel Grid.Row="5">
+            <Button Content="Reset defaults" Click="ResetDefaults" Padding="10,4" DockPanel.Dock="Left" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="OK" Click="OkClick" IsDefault="True" Width="80" Padding="8,4" Margin="0,0,8,0" />
+                <Button Content="Cancel" Click="CancelClick" IsCancel="True" Width="80" Padding="8,4" />
+            </StackPanel>
+        </DockPanel>
+    </Grid>
+</Window>

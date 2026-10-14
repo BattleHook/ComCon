@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\ComCon.Core\ComCon.Core.csproj" />
+    <ProjectReference Include="..\ComCon.Windows\ComCon.Windows.csproj" />
+    <Resource Include="..\..\Documentation\ComConApp.ico" Link="Assets\ComConApp.ico" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>..\..\Documentation\ComConApp.ico</ApplicationIcon>
+    <Version>0.1.0-beta.1</Version>
+    <Product>ComCon</Product>
+    <Authors>BattleHook (PA1RGX)</Authors>
+    <Copyright>Copyright (c) 2026 PA1RGX</Copyright>
+    <Description>ComCon radio COM-port broker for Windows.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\Documentation\Help\**\*" LinkBase="Help"
+             CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\LICENSE" Link="LICENSE.txt"
+             CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md"
+             CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- Redistributed component licenses for the portable package (see THIRD-PARTY-NOTICES.md). -->
+  <PropertyGroup>
+    <ComConPortsPackageDir>$(NuGetPackageRoot)system.io.ports\8.0.0\</ComConPortsPackageDir>
+    <ComConCoreRuntimePackDir>$(NuGetPackageRoot)microsoft.netcore.app.runtime.win-x64\$(BundledNETCoreAppPackageVersion)\</ComConCoreRuntimePackDir>
+    <ComConDesktopRuntimePackDir>$(NuGetPackageRoot)microsoft.windowsdesktop.app.runtime.win-x64\$(BundledNETCoreAppPackageVersion)\</ComConDesktopRuntimePackDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="$(ComConPortsPackageDir)LICENSE.TXT" Link="licenses\System.IO.Ports-LICENSE.txt"
+             CopyToPublishDirectory="PreserveNewest" Condition="Exists('$(ComConPortsPackageDir)LICENSE.TXT')" />
+    <Content Include="$(ComConPortsPackageDir)THIRD-PARTY-NOTICES.TXT" Link="licenses\System.IO.Ports-THIRD-PARTY-NOTICES.txt"
+             CopyToPublishDirectory="PreserveNewest" Condition="Exists('$(ComConPortsPackageDir)THIRD-PARTY-NOTICES.TXT')" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(SelfContained)' == 'true'">
+    <Content Include="$(ComConCoreRuntimePackDir)LICENSE.TXT" Link="licenses\dotnet-runtime-LICENSE.txt"
+             CopyToPublishDirectory="PreserveNewest" Condition="Exists('$(ComConCoreRuntimePackDir)LICENSE.TXT')" />
+    <Content Include="$(ComConCoreRuntimePackDir)THIRD-PARTY-NOTICES.TXT" Link="licenses\dotnet-runtime-THIRD-PARTY-NOTICES.txt"
+             CopyToPublishDirectory="PreserveNewest" Condition="Exists('$(ComConCoreRuntimePackDir)THIRD-PARTY-NOTICES.TXT')" />
+    <Content Include="$(ComConDesktopRuntimePackDir)LICENSE" Link="licenses\windowsdesktop-runtime-LICENSE.txt"
+             CopyToPublishDirectory="PreserveNewest" Condition="Exists('$(ComConDesktopRuntimePackDir)LICENSE')" />
+  </ItemGroup>
+
+</Project>

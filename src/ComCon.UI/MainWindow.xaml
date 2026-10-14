@@ -1,0 +1,364 @@
+<Window x:Class="ComCon.UI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ComCon.UI"
+        mc:Ignorable="d"
+        Title="ComCon App - COM Control Tool"
+        WindowState="Maximized"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanResize"
+        FontSize="14"
+        Height="860" Width="1280"
+        MinHeight="650" MinWidth="760"
+        Icon="pack://application:,,,/Assets/ComConApp.ico">
+    <Window.Resources>
+        <local:FramingModeDisplayNameConverter x:Key="FramingModeDisplayNameConverter" />
+    </Window.Resources>
+    <Window.CommandBindings>
+        <CommandBinding Command="ApplicationCommands.Help" Executed="ShowHelp" />
+    </Window.CommandBindings>
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <DockPanel LastChildFill="True">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button Content="Help (F1)" Command="ApplicationCommands.Help" Padding="10,4"
+                        ToolTip="Open the bundled offline Help guide" />
+                <Button Content="About" Click="ShowAbout" Padding="10,4" Margin="8,0,0,0"
+                        ToolTip="Version, license, notices and support links" />
+            </StackPanel>
+            <TextBlock Text="ComCon App - COM Control Tool" FontSize="24" FontWeight="SemiBold" />
+        </DockPanel>
+        <ScrollViewer Grid.Row="1" MaxHeight="450" VerticalScrollBarVisibility="Auto" Margin="0,12,0,12">
+        <StackPanel>
+            <StackPanel>
+                <TextBlock Text="{Binding Status}" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding CommandIpcStatus}" TextWrapping="Wrap" Margin="0,6,0,0" FontWeight="SemiBold" />
+                <Border BorderBrush="#D0D0D0" BorderThickness="1" CornerRadius="3" Background="#F9FAFB" Padding="10,8" Margin="0,6,0,0">
+                    <TextBlock Text="{Binding CommandIpcSessionsStatus}" TextWrapping="Wrap" FontFamily="Consolas, Segoe UI" FontSize="13" />
+                </Border>
+                <ItemsControl x:Name="LegacyRecoveryProfilesList" Margin="0,4,0,0">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{Binding ProfileId, StringFormat=Profile {0}}"
+                                           VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" TextWrapping="Wrap" VerticalAlignment="Center" Margin="12,0,0,0">
+                                    <Run Text="{Binding LegacyStatus.State}" />
+                                    <Run Text="{Binding LegacyStatus.Reason, StringFormat= — {0}}" />
+                                </TextBlock>
+                                <Button Grid.Column="2" Content="Recover Legacy"
+                                        Click="RecoverLegacy" Tag="{Binding ProfileId}"
+                                        IsEnabled="{Binding CanRecoverLegacy}" Padding="8,4"
+                                        Margin="8,0,0,0" />
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+            <TextBlock Text="Bridges start independently from a confirmed list. Selecting a stopped saved IPC Autoconnect profile offers that list; saving alone never starts it. RAW forwards all bytes, including transmit/tune. No startup session restoration in this build."
+                       Margin="0,8,0,0" TextWrapping="Wrap" />
+            <DataGrid x:Name="BridgeOverview" AutoGenerateColumns="False" IsReadOnly="True"
+                      CanUserAddRows="False" CanUserDeleteRows="False" Height="165" MinHeight="165" Margin="0,8,0,0">
+                <DataGrid.CellStyle>
+                    <Style TargetType="DataGridCell">
+                        <Setter Property="BorderThickness" Value="0" />
+                        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="Transparent" />
+                                <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=DataGridRow}}" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.CellStyle>
+                <DataGrid.RowStyle>
+                    <Style TargetType="DataGridRow">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource RunningRowBackgroundBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource RunningRowForegroundBrush}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsFaulted}" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource FaultRowBackgroundBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource FaultRowForegroundBrush}" />
+                            </DataTrigger>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding IsRunning}" Value="True" />
+                                    <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="True" />
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="Background" Value="{DynamicResource RunningSelectedRowBackgroundBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource RunningRowForegroundBrush}" />
+                            </MultiDataTrigger>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding IsFaulted}" Value="True" />
+                                    <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="True" />
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="Background" Value="{DynamicResource FaultSelectedRowBackgroundBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource FaultRowForegroundBrush}" />
+                            </MultiDataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.RowStyle>
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Profile / Transceiver" Binding="{Binding Profile}" Width="170" />
+                    <DataGridTextColumn Header="Saved mode" Binding="{Binding SavedMode}" Width="85" />
+                    <DataGridTextColumn Header="Actual state" Binding="{Binding ActualState}" Width="110" />
+                    <DataGridTextColumn Header="Legacy Client COM" Binding="{Binding LegacyClientCom}" Width="125" />
+                    <DataGridTextColumn Header="ComCon virtual COM" Binding="{Binding ComConVirtualCom}" Width="135" />
+                    <DataGridTextColumn Header="Transceiver COM" Binding="{Binding TransceiverCom}" Width="120" />
+                    <DataGridTextColumn Header="IPC Client / pipe" Binding="{Binding IpcDetails}" Width="220" />
+                    <DataGridTextColumn Header="Status / reason" Binding="{Binding Reason}" Width="*" MinWidth="330" />
+                </DataGrid.Columns>
+            </DataGrid>
+        </StackPanel>
+        </ScrollViewer>
+        <WrapPanel Grid.Row="2" Margin="0,0,0,12">
+            <Button x:Name="LoadConfigurationButton" Content="Load configuration..." Click="LoadConfiguration" Padding="12,6" />
+            <Button x:Name="ValidateConfigurationButton" Content="Validate" Click="ValidateConfiguration" Padding="12,6" Margin="8,0" />
+            <Button x:Name="SaveConfigurationButton" Content="Save configuration..." Click="SaveConfiguration" Padding="12,6" />
+            <Button x:Name="RefreshPortsButton" Content="Refresh ports" Click="RefreshPorts" Padding="12,6" Margin="8,0,0,0" />
+            <Button x:Name="StartBridgeButton" Content="Start selected" Click="StartBridge" Padding="12,6" Margin="8,0,0,0" />
+            <Button x:Name="StartListButton" Content="Start list..." Click="StartList" Padding="12,6" Margin="8,0,0,0" />
+            <Button x:Name="StopBridgeButton" Content="Stop selected" Click="StopBridge" Padding="12,6" Margin="8,0,0,0" IsEnabled="False" />
+            <Button x:Name="StopAllButton" Content="Stop all..." Click="StopAll" Padding="12,6" Margin="8,0,0,0" IsEnabled="False" />
+            <Button x:Name="RecoverIpcButton" Content="Recover IPC..." Click="RecoverIpcService" Padding="12,6" Margin="8,0,0,0" IsEnabled="False" />
+            <Button x:Name="StylingSettingsButton" Content="UI Styling..." Click="OpenStylingSettings" Padding="12,6" Margin="8,0,0,0" />
+        </WrapPanel>
+        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,0,0,12">
+            <CheckBox x:Name="RawCaptureCheckBox" Content="Capture raw CAT traffic" Checked="RawCaptureChanged"
+                      Unchecked="RawCaptureChanged" VerticalAlignment="Center" />
+            <TextBlock x:Name="RawCaptureStatusText" Margin="12,0" TextWrapping="Wrap" VerticalAlignment="Center" />
+        </StackPanel>
+        <Grid Grid.Row="4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="250" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+        <DataGrid x:Name="ProfilesGrid" ItemsSource="{Binding Profiles}" SelectedItem="{Binding SelectedProfile}" IsReadOnly="True"
+                  AutoGenerateColumns="False" CanUserAddRows="False"
+                  CanUserDeleteRows="False">
+            <DataGrid.CellStyle>
+                <Style TargetType="DataGridCell">
+                    <Setter Property="BorderThickness" Value="0" />
+                    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                    <Style.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=DataGridRow}}" />
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.CellStyle>
+            <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                            <Setter Property="Background" Value="{DynamicResource RunningRowBackgroundBrush}" />
+                            <Setter Property="Foreground" Value="{DynamicResource RunningRowForegroundBrush}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsFaulted}" Value="True">
+                            <Setter Property="Background" Value="{DynamicResource FaultRowBackgroundBrush}" />
+                            <Setter Property="Foreground" Value="{DynamicResource FaultRowForegroundBrush}" />
+                        </DataTrigger>
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding IsRunning}" Value="True" />
+                                <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="True" />
+                            </MultiDataTrigger.Conditions>
+                            <Setter Property="Background" Value="{DynamicResource RunningSelectedRowBackgroundBrush}" />
+                            <Setter Property="Foreground" Value="{DynamicResource RunningRowForegroundBrush}" />
+                        </MultiDataTrigger>
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding IsFaulted}" Value="True" />
+                                <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="True" />
+                            </MultiDataTrigger.Conditions>
+                            <Setter Property="Background" Value="{DynamicResource FaultSelectedRowBackgroundBrush}" />
+                            <Setter Property="Foreground" Value="{DynamicResource FaultRowForegroundBrush}" />
+                        </MultiDataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.RowStyle>
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="35" />
+                <DataGridTextColumn Header="Name" Binding="{Binding Label}" Width="*" />
+            </DataGrid.Columns>
+        </DataGrid>
+        <ScrollViewer x:Name="ProfileEditorPanel" Grid.Column="1" Margin="20,0,0,0" VerticalScrollBarVisibility="Auto">
+            <ScrollViewer.Resources>
+                <Style TargetType="TextBox">
+                    <Setter Property="IsEnabled" Value="{Binding DataContext.SelectedProfileEditable, RelativeSource={RelativeSource AncestorType=Window}}" />
+                </Style>
+                <Style TargetType="ComboBox">
+                    <Setter Property="IsEnabled" Value="{Binding DataContext.SelectedProfileEditable, RelativeSource={RelativeSource AncestorType=Window}}" />
+                </Style>
+                <Style TargetType="CheckBox">
+                    <Setter Property="IsEnabled" Value="{Binding DataContext.SelectedProfileEditable, RelativeSource={RelativeSource AncestorType=Window}}" />
+                </Style>
+            </ScrollViewer.Resources>
+            <StackPanel>
+                <TextBlock Text="Selected profile" FontSize="18" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding SelectedProfile.MetadataNotice}" TextWrapping="Wrap" Margin="0,4,0,8" />
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="28" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Left Column: Profile identity, options, and client rig-profile import -->
+                    <StackPanel Grid.Column="0" VerticalAlignment="Top">
+                        <TextBlock Text="Name" Margin="0,0,0,3" />
+                        <TextBox Text="{Binding SelectedProfile.Label, UpdateSourceTrigger=PropertyChanged}" Width="380" HorizontalAlignment="Left" />
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,8">
+                            <CheckBox Content="Enabled" IsChecked="{Binding SelectedProfile.Enabled}" VerticalAlignment="Center" />
+                            <CheckBox Content="Autoconnect" IsChecked="{Binding SelectedProfile.AutoConnect}" Margin="16,0" VerticalAlignment="Center" />
+                            <CheckBox Content="Command IPC enabled (start only this profile)"
+                                      IsEnabled="{Binding SelectedProfileCanEnableIpc}"
+                                      IsChecked="{Binding SelectedProfile.CommandIpcEnabled}" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <Button Content="Choose client rig-profile JSON..." Click="ImportClientRigProfile"
+                                IsEnabled="{Binding SelectedProfileEditable}" HorizontalAlignment="Left"
+                                Padding="8,4" Margin="0,4,0,0" />
+                    </StackPanel>
+
+                    <!-- Right Column: Addresses, COM endpoints, and Framing/Serial settings -->
+                    <StackPanel Grid.Column="2" VerticalAlignment="Top">
+                        <TextBlock Text="Shared-radio client addresses (hex; distinct per profile)" FontWeight="SemiBold" />
+                        <Grid Margin="0,4,0,10" HorizontalAlignment="Left">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="20" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="LegacyClient address" />
+                                <TextBox Text="{Binding SelectedProfile.LegacyClientAddress, UpdateSourceTrigger=PropertyChanged}" Width="70" HorizontalAlignment="Left" Margin="0,3,0,0" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="IpcClient address" />
+                                <TextBox Text="{Binding SelectedProfile.IpcClientAddress, UpdateSourceTrigger=PropertyChanged}" Width="70" HorizontalAlignment="Left" Margin="0,3,0,0" />
+                            </StackPanel>
+                        </Grid>
+                        <Grid Margin="0,0,0,10" HorizontalAlignment="Left">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="16" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="16" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Physical radio COM (exclusive)" />
+                                <ComboBox ItemsSource="{Binding AvailablePorts}" IsEditable="True"
+                                          IsTextSearchEnabled="False" Width="120" HorizontalAlignment="Left"
+                                          Text="{Binding SelectedProfile.PhysicalPort, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="0,3,0,0" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="com0com endpoint (ComCon virtual)" />
+                                <ComboBox ItemsSource="{Binding AvailablePorts}" IsEditable="True"
+                                          IsTextSearchEnabled="False" Width="120" HorizontalAlignment="Left"
+                                          Text="{Binding SelectedProfile.VirtualPort, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="0,3,0,0" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="4">
+                                <TextBlock Text="LegacyClient endpoint (mapping only)" />
+                                <ComboBox ItemsSource="{Binding AvailablePorts}" IsEditable="True"
+                                          IsTextSearchEnabled="False" Width="120" HorizontalAlignment="Left"
+                                          Text="{Binding SelectedProfile.CommanderPort, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="0,3,0,0" />
+                            </StackPanel>
+                        </Grid>
+                        <WrapPanel Orientation="Horizontal" Margin="0,0,0,4">
+                            <StackPanel Width="135" Margin="0,0,10,6">
+                                <TextBlock Text="Framing (structural only)" />
+                                <ComboBox ItemsSource="{Binding FramingModes}" SelectedItem="{Binding SelectedProfile.Framing}" Margin="0,3,0,0">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Converter={StaticResource FramingModeDisplayNameConverter}}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
+                            <StackPanel Width="75" Margin="0,0,10,6">
+                                <TextBlock Text="Baud rate" />
+                                <TextBox Text="{Binding SelectedProfile.BaudRate, UpdateSourceTrigger=PropertyChanged}" Margin="0,3,0,0" />
+                            </StackPanel>
+                            <StackPanel Width="55" Margin="0,0,10,6">
+                                <TextBlock Text="Data bits" />
+                                <TextBox Text="{Binding SelectedProfile.DataBits, UpdateSourceTrigger=PropertyChanged}" Margin="0,3,0,0" />
+                            </StackPanel>
+                            <StackPanel Width="75" Margin="0,0,10,6">
+                                <TextBlock Text="Parity" />
+                                <ComboBox ItemsSource="{Binding Parities}" SelectedItem="{Binding SelectedProfile.Parity}" Margin="0,3,0,0" />
+                            </StackPanel>
+                            <StackPanel Width="75" Margin="0,0,10,6">
+                                <TextBlock Text="Stop bits" />
+                                <ComboBox ItemsSource="{Binding StopBitOptions}" SelectedItem="{Binding SelectedProfile.StopBits}" Margin="0,3,0,0" />
+                            </StackPanel>
+                            <StackPanel Width="85" Margin="0,0,10,6">
+                                <TextBlock Text="Handshake" />
+                                <ComboBox ItemsSource="{Binding Handshakes}" SelectedItem="{Binding SelectedProfile.Handshake}" Margin="0,3,0,0" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" Margin="4,0,0,10">
+                                <CheckBox Content="DTR" IsChecked="{Binding SelectedProfile.DtrEnable}" Margin="0,0,10,0" />
+                                <CheckBox Content="RTS" IsChecked="{Binding SelectedProfile.RtsEnable}" />
+                            </StackPanel>
+                        </WrapPanel>
+                    </StackPanel>
+                </Grid>
+                <TextBlock Text="Rig mapping descriptions" FontWeight="SemiBold" Margin="0,4,0,0" />
+                <TextBlock Text="Import a client rig-profile JSON above to add or refresh a mapping, then save configuration. UUID and profile assignment are fixed here; CI-V address is available only for CI-V-framed profiles and is cleared when framing changes away from CI-V."
+                           TextWrapping="Wrap" Margin="0,4,0,6" />
+                <DataGrid ItemsSource="{Binding RigProfileMappingEditors}" AutoGenerateColumns="False"
+                          CanUserAddRows="False" CanUserDeleteRows="False" CanUserSortColumns="False"
+                          HeadersVisibility="Column" Height="150" MinHeight="80">
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsRuntimeLocked}" Value="True">
+                                    <Setter Property="IsEnabled" Value="False" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.RowStyle>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Rig UUID" Binding="{Binding RigProfileId}" IsReadOnly="True" Width="2*" />
+                        <DataGridTextColumn Header="Model name" Binding="{Binding ModelName, UpdateSourceTrigger=PropertyChanged}" Width="*" />
+                        <DataGridTemplateColumn Header="CI-V address" Width="*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding CivAddressDisplay}" VerticalAlignment="Center" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                            <DataGridTemplateColumn.CellEditingTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding CivAddress, UpdateSourceTrigger=PropertyChanged}"
+                                             IsEnabled="{Binding SupportsCivAddress}" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellEditingTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Profile" Binding="{Binding ProfileId}" IsReadOnly="True" Width="55" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </StackPanel>
+        </ScrollViewer>
+        </Grid>
+        <TextBlock Grid.Row="5" Text="Each profile owns its own bridge and COM ports. RAW and IPC can coexist on separate ports. IPC permits one client session per profile, up to four sessions (including multiple sessions from the same application). Running settings/mappings are locked; RAW can opt into saved IPC for a separately confirmed replacement. Saving remains offline-only."
+                   TextWrapping="Wrap" Margin="0,12,0,0" />
+    </Grid>
+</Window>

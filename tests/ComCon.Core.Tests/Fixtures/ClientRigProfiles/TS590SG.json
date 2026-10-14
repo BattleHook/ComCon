@@ -1,0 +1,8 @@
+{
+  "schema": "ham-shack-console/rig-profile",
+  "schema_version": 1,
+  "rig_profile_uuid": "12345678-1234-4234-8234-123456789abe",
+  "display_name": "Kenwood TS-590SG",
+  "transport": "KENWOOD_ASCII",
+  "capabilities": { "ptt": {} }
+}
