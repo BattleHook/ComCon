@@ -1,0 +1,56 @@
+name: Publish Help guide to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Documentation/Help/**"
+      - "LICENSE"
+      - "THIRD-PARTY-NOTICES.md"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble site
+        # The guide links to ../LICENSE.txt and ../THIRD-PARTY-NOTICES.md (package layout),
+        # so it lives in Help/ with those files one level up.
+        run: |
+          mkdir -p _site/Help
+          cp -r Documentation/Help/. _site/Help/
+          cp LICENSE _site/LICENSE.txt
+          cp THIRD-PARTY-NOTICES.md _site/THIRD-PARTY-NOTICES.md
+          cat > _site/index.html <<'EOF'
+          <!doctype html>
+          <html lang="en"><head><meta charset="utf-8">
+          <title>ComCon Help</title>
+          <meta http-equiv="refresh" content="0; url=Help/">
+          <link rel="canonical" href="Help/">
+          </head><body><p><a href="Help/">ComCon Installation and User Guide</a></p></body></html>
+          EOF
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
